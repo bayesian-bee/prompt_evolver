@@ -1,9 +1,12 @@
 import random
 import numpy as np
 from prompter import CachePrompter
+import configparser
 
 #TODO: make each of these functions take a prompter, rather than using this global one.
-prompter = CachePrompter()
+config = configparser.ConfigParser()
+config.read('chatgpt.config')
+prompter = CachePrompter(config.get('config', 'api_key'))
 
 def _send_to_chatgpt(prompt):
 	return prompter.send_prompt(prompt)

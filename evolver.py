@@ -4,14 +4,14 @@ import time
 
 class PromptEvolver:
 
-	def __init__(self, simulation_name, starting_prompts, mutation_set=[], breeding_set=[],
+	def __init__(self, simulation_name, starting_prompts, api_key='', mutation_set=[], breeding_set=[],
 		evaluator_function=lambda prompt: 0, num_generations_per_write=10, generation_size=100,
 		n_generations=100, reproduction_chances=[0.5, 0.5], mutation_weights=None, breeding_weights=None):
 		self.simulation_name=simulation_name
 		self.mutation_set = mutation_set
 		self.breeding_set = breeding_set
 		self.evaluator_function = evaluator_function
-		self.prompter = CachePrompter() #TODO: pass in the prompter rather than creating one here.
+		self.prompter = CachePrompter(api_key) #TODO: pass in the prompter rather than creating one here.
 		self.log = []
 		self.num_generations_per_write=num_generations_per_write
 		self.generation_size=generation_size

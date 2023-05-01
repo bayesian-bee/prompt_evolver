@@ -2,6 +2,7 @@ from mutators import chat_gpt_add_ten, chat_gpt_mutation,chat_gpt_addition,chat_
 from evolver import PromptEvolver
 import random
 import time
+import configparser
 
 prompt_set = [
     "Ketchup is a popular condiment made from tomatoes, vinegar, sugar, and spices.",
@@ -29,10 +30,13 @@ prompt_set = [
 def pasta_evaluator(result):
 	return result.count("pasta")+random.random()
 
+config = configparser.ConfigParser()
+config.read('chatgpt.config')
+
 mutation_set=[chat_gpt_add_ten, chat_gpt_mutation, chat_gpt_addition, 
 chat_gpt_compression, chat_gpt_deletion, chat_gpt_sentence_replace, 
 chat_gpt_noun_replace, chat_gpt_verb_replace]
-parameters = {'simulation_name':'ketchup_test_run2'+str(int(time.time())), 
+parameters = {'simulation_name':'ketchup_test_big'+str(int(time.time())), 
 'mutation_set':mutation_set,
 'mutation_weights':[1.0/8, 1.0/8, 1.0/8, 1.0/8, 1.0/8, 1.0/8, 1.0/8, 1.0/8],
 'breeding_set':[],
@@ -40,9 +44,10 @@ parameters = {'simulation_name':'ketchup_test_run2'+str(int(time.time())),
 'evaluator_function':pasta_evaluator, 
 'num_generations_per_write':10, 
 'generation_size':20,
-'n_generations':100, 
+'n_generations':1000, 
 'reproduction_chances':[1, 0], #mutation, breeding 
-'starting_prompts':prompt_set}
+'starting_prompts':prompt_set,
+'api_key':config.get('config', 'api_key')}
 
 prompt_evolver = PromptEvolver(**parameters)
 prompt_evolver.simulate()
