@@ -9,7 +9,7 @@ class DummyPrompter:
 
 class CachePrompter:
 
-	def __init__(self, api_key='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'):
+	def __init__(self, api_key=''):
 		self.cache = defaultdict(str)
 		openai.api_key = api_key
 		self.model = "gpt-3.5-turbo"
