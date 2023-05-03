@@ -1,4 +1,4 @@
-from mutators import chat_gpt_add_ten, chat_gpt_mutation,chat_gpt_addition,chat_gpt_compression,chat_gpt_deletion,chat_gpt_colorful,chat_gpt_tangential,chat_gpt_sentence_replace,chat_gpt_noun_replace,chat_gpt_verb_replace
+from mutators import *
 from evolver import PromptEvolver
 import random
 import time
@@ -35,16 +35,16 @@ config.read('chatgpt.config')
 
 mutation_set=[chat_gpt_add_ten, chat_gpt_mutation, chat_gpt_addition, 
 chat_gpt_compression, chat_gpt_deletion, chat_gpt_sentence_replace, 
-chat_gpt_noun_replace, chat_gpt_verb_replace]
-parameters = {'simulation_name':'ketchup_test_big'+str(int(time.time())), 
+chat_gpt_noun_replace, chat_gpt_verb_replace, chat_gpt_commandify, chat_gpt_noun_scramble]
+parameters = {'simulation_name':'ketchup_test_60k'+str(int(time.time())), 
 'mutation_set':mutation_set,
-'mutation_weights':[1.0/8, 1.0/8, 1.0/8, 1.0/8, 1.0/8, 1.0/8, 1.0/8, 1.0/8],
+'mutation_weights':[1.0/len(mutation_set) for _ in range(0, len(mutation_set))],
 'breeding_set':[],
 'breeding_weights':None,
 'evaluator_function':pasta_evaluator, 
 'num_generations_per_write':10, 
 'generation_size':20,
-'n_generations':1000, 
+'n_generations':60000, 
 'reproduction_chances':[1, 0], #mutation, breeding 
 'starting_prompts':prompt_set,
 'api_key':config.get('config', 'api_key')}

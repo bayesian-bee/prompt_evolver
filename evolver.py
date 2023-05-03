@@ -1,6 +1,7 @@
 import numpy as np
 from prompter import CachePrompter
 import time
+from math import isclose
 
 class PromptEvolver:
 
@@ -87,10 +88,10 @@ class PromptEvolver:
 		assert sum(self.reproduction_chances) == 1
 		assert len(self.reproduction_chances) == 2
 		if(self.mutation_weights):
-			assert sum(self.mutation_weights) == 1
+			assert isclose(sum(self.mutation_weights), 1, abs_tol=10e-9)
 			assert len(self.mutation_weights) == len(self.mutation_set)
 		if(self.breeding_weights):
-			assert sum(self.breeding_weights) == 1
+			assert isclose(sum(self.breeding_weights), 1, abs_tol=10e-9)
 			assert len(self.breeding_weights) == len(self.breeding_set)
 		assert self.n_generations > 1
 		assert len(self.starting_prompts) == self.generation_size

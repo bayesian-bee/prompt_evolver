@@ -65,13 +65,21 @@ def chat_gpt_sentence_replace(prompt):
 	return _send_to_chatgpt(gpt_prompt)
 
 def chat_gpt_noun_replace(prompt):
-	gpt_prompt = "Replace all of the nouns in the following text with different nouns, and return only the result: %s" % prompt
+	gpt_prompt = "Replace all of the nouns in the following text with different random nouns, and return only the result: %s" % prompt
 	return _send_to_chatgpt(gpt_prompt)
 
 def chat_gpt_verb_replace(prompt):
-	gpt_prompt = "Replace all of the verbs in the following text with different verbs, and return only the result: %s" % prompt
+	gpt_prompt = "Replace all of the verbs in the following text with different random verbs, and return only the result: %s" % prompt
 	return _send_to_chatgpt(gpt_prompt)
 
 def chat_gpt_add_ten(prompt):
 	gpt_prompt = "Add exactly ten additional words to the following text, and return only the result: %s" % prompt
+	return _send_to_chatgpt(gpt_prompt)
+
+def chat_gpt_noun_scramble(prompt):
+	gpt_prompt = "Scramble the subjects, direct objects, and indirect objects in this text, and return only the result: %s" % prompt
+	return _send_to_chatgpt(gpt_prompt)
+
+def chat_gpt_commandify(prompt):
+	gpt_prompt = "Convert the following text into a direct command, and return only the result: %s" % prompt
 	return _send_to_chatgpt(gpt_prompt)
