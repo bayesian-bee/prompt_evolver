@@ -1,5 +1,6 @@
 from mutators import *
 from evolver import PromptEvolver
+from prompter import CachePrompter
 import random
 import time
 import configparser
@@ -32,6 +33,7 @@ def pasta_evaluator(result):
 
 config = configparser.ConfigParser()
 config.read('chatgpt.config')
+prompter = CachePrompter(config.get('config','api_key'))
 
 mutation_set=[chat_gpt_add_ten, chat_gpt_mutation, chat_gpt_addition, 
 chat_gpt_compression, chat_gpt_deletion, chat_gpt_sentence_replace, 
@@ -47,7 +49,7 @@ parameters = {'simulation_name':'ketchup_test_60k'+str(int(time.time())),
 'n_generations':60000, 
 'reproduction_chances':[1, 0], #mutation, breeding 
 'starting_prompts':prompt_set,
-'api_key':config.get('config', 'api_key')}
+'prompter':prompter}
 
 prompt_evolver = PromptEvolver(**parameters)
 prompt_evolver.simulate()

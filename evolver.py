@@ -5,14 +5,14 @@ from math import isclose
 
 class PromptEvolver:
 
-	def __init__(self, simulation_name, starting_prompts, api_key='', mutation_set=[], breeding_set=[],
+	def __init__(self, simulation_name, starting_prompts, prompter, mutation_set=[], breeding_set=[],
 		evaluator_function=lambda prompt: 0, num_generations_per_write=10, generation_size=100,
 		n_generations=100, reproduction_chances=[0.5, 0.5], mutation_weights=None, breeding_weights=None):
 		self.simulation_name=simulation_name
 		self.mutation_set = mutation_set
 		self.breeding_set = breeding_set
 		self.evaluator_function = evaluator_function
-		self.prompter = CachePrompter(api_key) #TODO: pass in the prompter rather than creating one here.
+		self.prompter = prompter
 		self.log = []
 		self.num_generations_per_write=num_generations_per_write
 		self.generation_size=generation_size
@@ -62,7 +62,7 @@ class PromptEvolver:
 							mutation_index = np.random.choice(len(self.mutation_set), p=self.mutation_weights)
 						else:
 							mutation_index = np.random.choice(len(self.mutation_set))
-						new_generation.append(self.mutation_set[mutation_index](survivors[i]))
+						new_generation.append(self.mutation_set[mutation_index](survivors[i], self.prompter))
 					
 					elif(reproduction_outcomes[i]=='breed'):
 						partner = np.random.choice(len(survivors))
@@ -73,7 +73,7 @@ class PromptEvolver:
 							else:
 								breeding_index = np.random.choice(len(self.breeding_set))
 
-						new_generation.append(self.breeding_set[breeding_index](survivors[i], partner))
+						new_generation.append(self.breeding_set[breeding_index](survivors[i], partner, self.prompter))
 
 					else:
 						raise Exception("unknown outcome %s" % reproduction_outcomes[i])
