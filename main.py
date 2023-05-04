@@ -38,7 +38,8 @@ prompter = CachePrompter(config.get('config','api_key'))
 mutation_set=[chat_gpt_add_ten, chat_gpt_mutation, chat_gpt_addition, 
 chat_gpt_compression, chat_gpt_deletion, chat_gpt_sentence_replace, 
 chat_gpt_noun_replace, chat_gpt_verb_replace, chat_gpt_commandify, chat_gpt_noun_scramble]
-parameters = {'simulation_name':'ketchup_test_60k'+str(int(time.time())), 
+print([1.0/len(mutation_set) for _ in range(0, len(mutation_set))])
+parameters = {'simulation_name':'ketchup_test_60k_'+str(int(time.time())), 
 'mutation_set':mutation_set,
 'mutation_weights':[1.0/len(mutation_set) for _ in range(0, len(mutation_set))],
 'breeding_set':[],

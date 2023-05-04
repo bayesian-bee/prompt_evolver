@@ -1,12 +1,6 @@
 import random
 import numpy as np
-from prompter import CachePrompter
 import configparser
-
-#TODO: make each of these functions take a prompter, rather than using this global one.
-config = configparser.ConfigParser()
-config.read('chatgpt.config')
-prompter = CachePrompter(config.get('config', 'api_key'))
 
 def _pre_process(prompt):
 	return prompt.split(" ")

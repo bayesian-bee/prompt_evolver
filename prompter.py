@@ -7,8 +7,11 @@ import time
 
 class DummyPrompter:
 
+	def __init__(self, api_key, **kwargs):
+		pass
+
 	def send_prompt(self, prompt):
-		return 'soda'
+		return 'obamna soda'
 
 class CachePrompter:
 
@@ -19,7 +22,6 @@ class CachePrompter:
 		self.backoff_limit = backoff_limit
 		
 	def hash(self, prompt):
-		import hashlib
 		h = hashlib.new('sha256')#sha256 can be replaced with diffrent algorithms
 		h.update(prompt.encode()) #give a encoded string. Makes the String to the Hash 
 		return h.hexdigest()#Prints the Hash

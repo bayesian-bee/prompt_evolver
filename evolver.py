@@ -1,7 +1,38 @@
 import numpy as np
-from prompter import CachePrompter
 import time
 from math import isclose
+import hashlib
+import dataclasses
+
+@dataclasses.dataclass
+class Prompt:
+	prompt_id: str
+	content: str
+	response: str
+	parent_ids: list[str]
+	generator_method: str
+	score: float
+
+	def __init__(self, content, response=None, prompt_id=None, parent_ids=None, generator_method=None, score=None):
+		self.content = content
+		self.response = response
+		if(prompt_id):
+			self.prompt_id = prompt_id
+		else:
+			self.prompt_id = self.generate_prompt_id(content)
+		self.parent_ids = parent_ids
+		self.generator_method = generator_method
+		self.score = score
+
+
+	@staticmethod
+	def generate_prompt_id(content):
+		h = hashlib.new('sha256')#sha256 can be replaced with diffrent algorithms
+		h.update(content.encode()) #give a encoded string. Makes the String to the Hash 
+		return h.hexdigest()#Prints the Hash
+
+	def make_mutated_child(self, new_prompt, mutator_name):
+		return Prompt(content=new_prompt, parent_ids=[self.prompt_id], generator_method = mutator_name)
 
 class PromptEvolver:
 
@@ -22,32 +53,39 @@ class PromptEvolver:
 		self.breeding_weights=breeding_weights
 		self.starting_prompts=starting_prompts
 
-	def _log_status(self, generation, prompts, results, scores, survivors, write_to_file=True):
-		self.log.append({'generation':generation, 'prompts':prompts, 'results': results, 'scores':scores, 'survivors':survivors})
+	def _log_status(self, generation, prompts, survivors, write_to_file=True):
+		self.log.append({'generation':generation, 
+			'prompts':[dataclasses.asdict(p) for p in prompts], 
+			'survivors':[dataclasses.asdict(s) for s in survivors]}
+			)
 		if(write_to_file):
 			with open('./logs/'+self.simulation_name+'_generations.log','a') as f:
 				for l in self.log:
 					f.write(str(l)+'\n')
 			self.log = []
 
+	@staticmethod
+	def get_indices_of_best_scores(scores):
+		generation_size = len(scores)
+		return np.argpartition(scores, -int(generation_size/2.0))[int(generation_size/2.0):]
 
 	def simulate(self):
 
 		self.test_parameters()
 
-		prompts = self.starting_prompts
+		prompts = [Prompt(p) for p in self.starting_prompts]
 		start_time = time.time()
 		for g in range(0, self.n_generations):
 			print('generation %d/%d (%.2f min elapsed)' % (g+1, self.n_generations, (time.time() - start_time)/60.0))
 
 			#read and send all prompts
-			results = [self.prompter.send_prompt(p) for p in prompts]
-
-			#read and evaluate all results
-			scores = [self.evaluator_function(r) for r in results]
+			for p in prompts:
+				response = self.prompter.send_prompt(p.content)
+				p.response = response
+				p.score = self.evaluator_function(p.response)
 
 			#get top half of results
-			winning_half = np.argpartition(scores, -int(self.generation_size/2.0))[int(self.generation_size/2.0):]
+			winning_half = self.get_indices_of_best_scores([p.score for p in prompts])
 			survivors = [prompts[winner] for winner in winning_half]
 			reproduction_outcomes = np.random.choice(['mutate','breed'], size=len(survivors), replace=True, p=self.reproduction_chances)
 
@@ -62,9 +100,12 @@ class PromptEvolver:
 							mutation_index = np.random.choice(len(self.mutation_set), p=self.mutation_weights)
 						else:
 							mutation_index = np.random.choice(len(self.mutation_set))
-						new_generation.append(self.mutation_set[mutation_index](survivors[i], self.prompter))
+						mutator = self.mutation_set[mutation_index]
+						mutated_prompt = mutator(survivors[i].content, self.prompter)
+						new_generation.append(survivors[i].make_mutated_child(mutated_prompt, str(mutator)))
 					
 					elif(reproduction_outcomes[i]=='breed'):
+						raise Exception("Breeding not implemented, but we're trying to breed!!!!")
 						partner = np.random.choice(len(survivors))
 						if(partner>=i):#cannot breed with itself
 							partner += 1
@@ -73,12 +114,14 @@ class PromptEvolver:
 							else:
 								breeding_index = np.random.choice(len(self.breeding_set))
 
-						new_generation.append(self.breeding_set[breeding_index](survivors[i], partner, self.prompter))
+						breeder = self.breeding_set[breeding_index]
+						bred_prompt = breeder(survivors[i].content, partner.content, self.prompter)
+						#new_generation.append(survivors[i].make_bred_prompt(bred_prompt, breeder)) #TODO: DEFINE THIS
 
 					else:
 						raise Exception("unknown outcome %s" % reproduction_outcomes[i])
 
-			self._log_status(g, prompts, results, scores, survivors, write_to_file = ((g+1) % self.num_generations_per_write)==0)
+			self._log_status(g, prompts, survivors, write_to_file = ((g+1) % self.num_generations_per_write)==0)
 			
 			prompts = new_generation
 
