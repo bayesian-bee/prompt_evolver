@@ -13,7 +13,7 @@ class DummyPrompter:
 	def send_prompt(self, prompt):
 		return 'obamna soda'
 
-class CachePrompter:
+class OpenAICachePrompter:
 
 	def __init__(self, api_key='', backoff_limit=20):
 		self.cache = defaultdict(str)
@@ -39,19 +39,21 @@ class CachePrompter:
 
 				return completion.choices[0].message.content
 			except RateLimitError:
-				backoff_time = (i+1)**2
+				backoff_time = (rate_limit_counter+1)**2
 				print("Rate limited. backing off for %d sec..." % backoff_time)
-				time.sleep((i+1)**1.5)
+				time.sleep((rate_limit_counter+1)**1.5)
 		end_time = time.time()
 		raise RateLimitError("Rate limited after %d attempts (total time %d seconds)." % (self.backoff_limit, end_time - start_time))
 
-	def send_prompt(self, prompt):
-
-		result_key = self.hash(prompt)
-		result = self.cache[result_key]
+	def send_prompt(self, prompt, use_cache=True):
+		result = None
+		if(use_cache):
+			result_key = self.hash(prompt)
+			result = self.cache[result_key]
 		
 		if(not result):
 			result = self._get_result(prompt)
-			self.cache[result_key] = result
+			if(use_cache):
+				self.cache[result_key] = result
 		
 		return result

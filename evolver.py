@@ -36,9 +36,9 @@ class Prompt:
 
 class PromptEvolver:
 
-	def __init__(self, simulation_name, starting_prompts, prompter, mutation_set=[], breeding_set=[],
+	def __init__(self, simulation_name, prompter, starting_prompts=None, mutation_set=[], breeding_set=[],
 		evaluator_function=lambda prompt: 0, num_generations_per_write=10, generation_size=100,
-		n_generations=100, reproduction_chances=[0.5, 0.5], mutation_weights=None, breeding_weights=None):
+		n_generations=100, reproduction_chances=[0.5, 0.5], mutation_weights=None, breeding_weights=None, identity_rule=True):
 		self.simulation_name=simulation_name
 		self.mutation_set = mutation_set
 		self.breeding_set = breeding_set
@@ -52,9 +52,19 @@ class PromptEvolver:
 		self.mutation_weights=mutation_weights
 		self.breeding_weights=breeding_weights
 		self.starting_prompts=starting_prompts
+		self.identity_rule=identity_rule
 
-	def _log_status(self, generation, prompts, survivors, write_to_file=True):
-		self.log.append({'generation':generation, 
+	def generate_starting_prompts(self):
+		starting_prompts = []
+		for i in range(0, self.generation_size):
+			prompt = "Generate and return a two sentence paragraph. Return only the paragraph."
+			starting_prompts.append(self.prompter.send_prompt(prompt, use_cache=False))
+		return starting_prompts
+
+
+	def _log_status(self, generation, generation_timestamp, prompts, survivors, write_to_file=True):
+		self.log.append({'generation':generation,
+			'generation_timestamp':generation_timestamp,
 			'prompts':[dataclasses.asdict(p) for p in prompts], 
 			'survivors':[dataclasses.asdict(s) for s in survivors]}
 			)
@@ -64,19 +74,23 @@ class PromptEvolver:
 					f.write(str(l)+'\n')
 			self.log = []
 
-	@staticmethod
-	def get_indices_of_best_scores(scores):
-		generation_size = len(scores)
-		return np.argpartition(scores, -int(generation_size/2.0))[int(generation_size/2.0):]
+	def _get_survivors(self, prompts, n_survivors):
+		winners = np.argpartition([p.score for p in prompts], -n_survivors)[n_survivors:]
+		return [prompts[winner] for winner in winners]
 
 	def simulate(self):
+
+		if(not self.starting_prompts):
+			print('No starting prompts detected. Initializing %d prompts...' % self.generation_size)
+			self.starting_prompts = self.generate_starting_prompts()
 
 		self.test_parameters()
 
 		prompts = [Prompt(p) for p in self.starting_prompts]
 		start_time = time.time()
 		for g in range(0, self.n_generations):
-			print('generation %d/%d (%.2f min elapsed)' % (g+1, self.n_generations, (time.time() - start_time)/60.0))
+			generation_time = time.time()
+			print('generation %d/%d (%.2f min elapsed)' % (g+1, self.n_generations, (generation_time- start_time)/60.0))
 
 			#read and send all prompts
 			for p in prompts:
@@ -85,8 +99,7 @@ class PromptEvolver:
 				p.score = self.evaluator_function(p.response)
 
 			#get top half of results
-			winning_half = self.get_indices_of_best_scores([p.score for p in prompts])
-			survivors = [prompts[winner] for winner in winning_half]
+			survivors = self._get_survivors(prompts, int(self.generation_size/2.0))
 			reproduction_outcomes = np.random.choice(['mutate','breed'], size=len(survivors), replace=True, p=self.reproduction_chances)
 
 			if(g < self.n_generations-1):
@@ -121,7 +134,7 @@ class PromptEvolver:
 					else:
 						raise Exception("unknown outcome %s" % reproduction_outcomes[i])
 
-			self._log_status(g, prompts, survivors, write_to_file = ((g+1) % self.num_generations_per_write)==0)
+			self._log_status(g, generation_time, prompts, survivors, write_to_file = ((g+1) % self.num_generations_per_write)==0)
 			
 			prompts = new_generation
 

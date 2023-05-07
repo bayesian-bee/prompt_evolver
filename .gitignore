@@ -1,3 +1,5 @@
 chatgpt.config
 __pycache__/
 logs/*
+.ipynb_checkpoints/
+

@@ -1,6 +1,6 @@
 import json
 
-fname = "logs/ketchup_test_60k_1683115483_generations.log"
+fname = "logs/ketchup_test_prompt_refactor_10k_1683202250_generations.log"
 
 with open(fname,'r') as f:
 	data = f.readlines()
